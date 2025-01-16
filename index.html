@@ -123,33 +123,33 @@
             let value = 8;
             
             // items contents: [item, item number, product, cost per product, quantity, total cost]
-            let item1 = ["item_", "1", "Bulmers Original Bottle", "$4.00", 1, "$4.00"];
-            let item2 = ["item_", "2", "Bulmers Pear Bottle", "$4.00", 1, "$4.00"];
-        
+            let items = [ 
+                ["Bulmers Original Bottle", 4, 1],
+                ["Cooler Bottle", 6, 2],
+                ["Bulmers Pear Bottle", 5, 1]
+            ];
+            
             // Initialize the JSON object with default keys
             const jsonObject = {
                 customer_name: name,
                 invoice_company: company,
                 invoice_date: date,
                 total_invoice_value: value,
-                invoice_items_products_list: {
-                    [item1[0] + item1[1]]: {
-                        [item1[2]]: {
-                            cost: item1[3],
-                            qty: item1[4],
-                            total: item1[5]
-                        }
-                    },
-                    [item2[0] + item2[1]]: {
-                        [item2[2]]: {
-                            cost: item2[3],
-                            qty: item2[4],
-                            total: item2[5]
-                        }
-                    }
-                }
+                invoice_items_products_list: {}
             };
-
+            
+            // Dynamically add items to invoice_items_products_list
+            items.forEach((item, index) => {
+                const key = "item_" + (index+1).toString(); // Concatenate "item_" and index
+                jsonObject.invoice_items_products_list[key] = {
+                    [item[0]]: { // Product name
+                        cost: "$" + (item[1]).toString() + ".00", // Cost per product
+                        qty: item[2],  // Quantity
+                        total: "$" + (item[1] * item[2]).toString() + ".00" // Total cost
+                    }
+                };
+            });
+        
             return JSON.stringify(jsonObject, null, 4); // 4 spaces for indentation
         }
         
