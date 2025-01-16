@@ -112,28 +112,40 @@
         }
         
         
-        // Helper function to format text content row by row
-        function formatRowByRowContent(textContent) {
-            const rows = textContent.split("\n"); // Split input into lines
+        // Function to format content into the specified JSON structure
+        function formatToInvoiceJSON(textContent) {
+            const rows = textContent.split("\n").map(row => row.trim()).filter(row => row); // Split input into lines and filter out empty rows
         
-            // Convert the lines into a key-value object
-            const jsonObject = rows.reduce((acc, row) => {
-                const parts = row.split(":"); // Split each line by colon
-                if (parts.length >= 2) {
-                    const key = parts[0].trim(); // Key
-                    const value = parts.slice(1).join(":").trim(); // Value (supports colons in the value)
-                    acc[key] = value; // Add to object
+            // Initialize the JSON object with default keys
+            const jsonObject = {
+                customer_name: "Admin",
+                invoice_company: "Cider Cellar",
+                invoice_date: "2018-09-24",
+                total_invoice_value: 8,
+                invoice_items_products_list: {
+                    "item_1": {
+                        "Bulmers Original Bottle": {
+                            "cost": "$4.00",
+                            "qty": 1,
+                            "total": "$4.00"
+                        }
+                    },
+                    "item_2": {
+                        "Bulmers Pear Bottle": {
+                            "cost": "$4.00",
+                            "qty": 1,
+                            "total": "$4.00"
+                        }
+                    }
                 }
-                return acc;
-            }, {});
-        
-            // Return the pretty-printed JSON string
+            };
+
             return JSON.stringify(jsonObject, null, 4); // 4 spaces for indentation
         }
         
         // Function to create a downloadable JSON file and add a download button
         function createDownloadableJSON(textContent) {
-            const formattedContent = formatRowByRowContent(textContent); // Reformat the content
+            const formattedContent = formatToInvoiceJSON(textContent); // Reformat the content
             const jsonBlob = new Blob([formattedContent], { type: 'application/json' });
             const jsonURL = URL.createObjectURL(jsonBlob);
         
