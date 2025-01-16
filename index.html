@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Juju Receipt Reader</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.min.js"></script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Juju Receipt Reader</h1>
+
+    <div class="container">
+        <h2>1. Select an Image or File</h2>
+        <input type="file" id="predict-image" accept="image/*">
+        <button id="predict-button">Predict</button>
+        <p id="prediction-result"></p>
+    </div>
+    
+    <div class="container">
+        <h2>2. Output of Selected Image</h2>
+        <div id="image-output" class="scrollable-text-container"></div>
+    </div>
+    
+    <div class="container">
+        <h2>3. Total Amount Spent</h2>
+        <p id="total-output"></p>
+    </div>
+    
+    <style>
+        .scrollable-text-container {
+            height: 400px; /* Fixed height */
+            overflow-y: auto; /* Vertical scroll when content overflows */
+            border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+            padding: 10px; /* Optional: Add padding for aesthetics */
+            background-color: #f9f9f9; /* Optional: Background color for better readability */
+        }
+    </style>
+    
+    <div class="container">
+        <h2>4. Download output JSON File</h2>
+        <p id="json-output"></p>
+    </div>
+    
+
+    <script type="module"> // Script set to "module" type to allow for imports
+        // Imports functions from other file classes
+        import { Extractor } from './textExtractor.js';
+        
+        const reader = new Extractor(); // Initializes variable for image extractor
+        let model; // Initializes tensor flow training model
+        
+        const trainButton = document.getElementById('train-button');
+        const predictButton = document.getElementById('predict-button');
+        
+        // Initializes result and status paragraphs
+        const predictionResult = document.getElementById('prediction-result');
+        const trainingStatus = document.getElementById('training-status');
+        const imageOutput = document.getElementById('image-output');
+        const totalOutput = document.getElementById('total-output');
+        const jsonOutput = document.getElementById('json-output');
+        
+        
+        // Button to select image to determine if planet or not
+        async function predictImage(file) {
+        
+            try {
+                if (file.type === 'application/pdf') {
+                    // Handle text-based PDFs
+                    const extractedText = await reader.extractTextFromPDF(file);
+        
+                    if (!extractedText.trim()) {
+                        alert('No text found in this PDF.');
+                        return;
+                    }
+        
+                    // Displays PDF output
+                    predictionResult.textContent = 'Category';
+                    imageOutput.innerHTML = reader.getText().replace(/\n/g, '<br>');
+                    totalOutput.innerHTML = reader.getTotal().replace(/\n/g, '<br>');
+        
+                    // Generate and display JSON file
+                    createDownloadableJSON(reader.getText());
+        
+                } else if (file.type.startsWith('image/')) {
+                    // Handle image files
+                    predictionResult.textContent = 'Category';
+        
+                    // Displays image output string as paragraph content
+                    reader.extractImage(file).then(() => {
+                        imageOutput.innerHTML = reader.getText().replace(/\n/g, '<br>');
+                        totalOutput.innerHTML = reader.getTotal().replace(/\n/g, '<br>');
+        
+                        // Generate and display JSON file
+                        createDownloadableJSON(reader.getText());
+                    });
+        
+                } else {
+                    alert('Unsupported file type. Please upload an image or a PDF.');
+                }
+            } catch (error) {
+                console.error('Error processing file:', error);
+                alert('An error occurred while processing the file. Please check the file and try again.');
+            }
+        }
+        
+        
+        // Helper function to format text content row by row
+        function formatRowByRowContent(textContent) {
+            const rows = textContent.split("\n"); // Split input into lines
+        
+            // Convert the lines into a key-value object
+            const jsonObject = rows.reduce((acc, row) => {
+                const parts = row.split(":"); // Split each line by colon
+                if (parts.length >= 2) {
+                    const key = parts[0].trim(); // Key
+                    const value = parts.slice(1).join(":").trim(); // Value (supports colons in the value)
+                    acc[key] = value; // Add to object
+                }
+                return acc;
+            }, {});
+        
+            // Return the pretty-printed JSON string
+            return JSON.stringify(jsonObject, null, 4); // 4 spaces for indentation
+        }
+        
+        // Function to create a downloadable JSON file and add a download button
+        function createDownloadableJSON(textContent) {
+            const formattedContent = formatRowByRowContent(textContent); // Reformat the content
+            const jsonBlob = new Blob([formattedContent], { type: 'application/json' });
+            const jsonURL = URL.createObjectURL(jsonBlob);
+        
+            // Create a download button
+            const downloadButton = document.createElement('a');
+            downloadButton.href = jsonURL;
+            downloadButton.download = 'output.json';
+            downloadButton.textContent = 'Download JSON';
+            downloadButton.style.display = 'block'; // Ensure it's visible
+        
+            // Clear previous content in jsonOutput and add the button
+            jsonOutput.innerHTML = ''; // Clear existing content
+            jsonOutput.appendChild(downloadButton);
+        }
+        
+
+        predictButton.addEventListener('click', async () => {
+            const file = document.getElementById('predict-image').files[0];
+            if (!file) {
+                alert('Please select an image to predict.');
+                return;
+            }
+            await predictImage(file);
+        });
+    </script>
+</body>
+</html>
