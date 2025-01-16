@@ -169,13 +169,23 @@
             // Clear previous content in jsonOutput and add the button
             jsonOutput.innerHTML = ''; // Clear existing content
             jsonOutput.appendChild(downloadButton);
-            
-            // Also display the formatted content in the jsonOutput container
-            const formattedDisplay = document.createElement('pre');
-            formattedDisplay.textContent = formattedContent; // Use <pre> for preserving formatting
-            jsonOutput.appendChild(formattedDisplay);
-        }
         
+            // Create an editable textarea for the JSON content
+            const editableTextarea = document.createElement('textarea');
+            editableTextarea.value = formattedContent; // Set the formatted JSON as the value
+            editableTextarea.style.width = '100%'; // Adjust width for better visibility
+            editableTextarea.style.height = '300px'; // Adjust height for better usability
+            jsonOutput.appendChild(editableTextarea);
+        
+            // Update the download button when the textarea content changes
+            editableTextarea.addEventListener('input', () => {
+                const updatedContent = editableTextarea.value; // Get the updated content
+                const updatedBlob = new Blob([updatedContent], { type: 'application/json' });
+                const updatedURL = URL.createObjectURL(updatedBlob);
+                downloadButton.href = updatedURL; // Update the download link
+            });
+        }
+
 
         predictButton.addEventListener('click', async () => {
             const file = document.getElementById('predict-image').files[0];
