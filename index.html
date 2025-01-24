@@ -119,24 +119,24 @@
             const lines = rawText.split('\n').map(line => line.trim()).filter(line => line !== '');
         
             lines.forEach(line => {
-                // Extract quantity (number at the start)
-                const quantityMatch = line.match(/^\d+/);
-                const quantity = quantityMatch ? parseInt(quantityMatch[0], 10) : 1;
+                // Extract quantity (e.g., "1x")
+                const quantityMatch = line.match(/(\d+)x/);
+                const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 1;
         
-                // Extract cost (e.g., "$4.00" or "4.00")
-                const costMatch = line.match(/\$\d+(\.\d{2})?|(\d+(\.\d{2}))/);
-                const cost = costMatch ? parseFloat(costMatch[0].replace('$', '')) : 0;
+                // Extract cost (e.g., "$4.00" or "£4.00")
+                const costMatch = line.match(/[\$\£]\d+(\.\d{2})?/);
+                const cost = costMatch ? parseFloat(costMatch[0].replace(/[\$\£]/, '')) : 0;
         
-                // Extract product name (text before cost)
-                const productMatch = line.match(/^.+(?=\s\$\d+|\s\d+(\.\d{2})?)/);
-                const productName = productMatch ? productMatch[0].replace(/^\d+\s/, '').trim() : null;
+                // Extract product name (ignoring quantity and cost parts)
+                const productMatch = line.match(/(\d+x\s)?(.+?)(?=\s[\$\£]\d+|\s\d+(\.\d{2})?)/);
+                const productName = productMatch ? productMatch[2].trim() : null;
         
-                if (productName) {
+                if (productName && productName.length >= 3) {
                     products.push({
                         product: productName,
-                        cost_per_product: `$${cost.toFixed(2)}`,
+                        cost_per_product: `£${cost.toFixed(2)}`,
                         quantity,
-                        total: `$${(cost * quantity).toFixed(2)}`
+                        total: `£${(cost * quantity).toFixed(2)}`
                     });
                 }
             });
@@ -161,7 +161,6 @@
             // items contents: [product name, cost per product, quantity]
             let items = [ 
                 ["Bulmers Original Bottle", 4, 1],
-                ["Cooler Bottle", 6, 2],
                 ["Bulmers Pear Bottle", 5, 1]
             ];
             

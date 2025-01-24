@@ -17,8 +17,15 @@ export class Extractor {
             }
         )
         .then(({ data: { text } }) => {
-            // Add '\n' after each line and save as a single string
-            this.imageText = text.split('\n').map(line => line.trim() + '\n').join('');
+            // Process the extracted text
+            this.imageText = text
+                .split('\n') // Split into lines
+                .map(line => {
+                    // Remove leading artifacts of 1-2 characters or symbols, unless they include 'x'
+                    return line.replace(/^[^x\s\w\d]{1,2}\s*|^\b[^x\s]{1,2}\b\s*/, '').trim();
+                })
+                .filter(line => line) // Remove empty lines
+                .join('\n'); // Join back into a single string with '\n'
         })
         .catch((err) => {
             console.error('Error during extraction:', err);
