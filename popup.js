@@ -4,8 +4,12 @@
     // Imported as async to avoid "not a module" errors
         const module = await import('./textExtractor.js');
         Extractor = module.Extractor;
+        
+        // Store the global Tesseract object in a variable
+        const TesseractObject = window.Tesseract;
+        console.log("Available Tesseract properties:", Object.keys(TesseractObject));
             
-        const reader = new Extractor();
+        const reader = new Extractor(TesseractObject);
         let model; // Initializes tensor flow training model
         
         const trainButton = document.getElementById('train-button');
@@ -22,7 +26,7 @@
         // Button to select image to determine if planet or not
         async function predictImage(file) {
         
-            try {
+            //try {
                 if (file.type === 'application/pdf') {
                     // Handle text-based PDFs
                     const extractedText = await reader.extractTextFromPDF(file);
@@ -56,10 +60,10 @@
                 } else {
                     alert('Unsupported file type. Please upload an image or a PDF.');
                 }
-            } catch (error) {
-                console.error('Error processing file:', error);
-                alert('An error occurred while processing the file. Please check the file and try again.');
-            }
+            //} catch (error) {
+                //console.error('Error processing file:', error);
+                //alert('An error occurred while processing the file. Please check the file and try again.');
+            //}
         }
         
         

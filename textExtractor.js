@@ -1,31 +1,31 @@
 export class Extractor {
-    /**
-     * Initializes the text Extractor class
-     */
-    constructor() {
-        // Variable to store extracted text with newline separation
+    constructor(tesseract) {
         this.imageText = '';
+        this.TesseractObject = tesseract;
     }
     
-    // Extracts the text from input image and returns a Promise
     extractImage(image) {
-        return Tesseract.recognize(
-            image, // Input image
-            'eng',
-            {
-                // logger: (info) => console.log('Progress:', info), // Optional logger
-            }
-        )
+        // Log the specific properties we're trying to access
+        console.log("Tesseract.default:", this.TesseractObject);
+        console.log("Available Tesseract properties:", Object.keys(this.TesseractObject));
+    
+        // Create a worker from the default export
+        return this.TesseractObject.createWorker({
+            workerPath: '../libs/worker.min.js',
+        })
+        .then(async worker => {
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            return worker.recognize(image);
+        })
         .then(({ data: { text } }) => {
-            // Process the extracted text
             this.imageText = text
-                .split('\n') // Split into lines
+                .split('\n')
                 .map(line => {
-                    // Remove leading artifacts of 1-2 characters or symbols, unless they include 'x'
                     return line.replace(/^[^x\s\w\d]{1,2}\s*|^\b[^x\s]{1,2}\b\s*/, '').trim();
                 })
-                .filter(line => line) // Remove empty lines
-                .join('\n'); // Join back into a single string with '\n'
+                .filter(line => line)
+                .join('\n');
         })
         .catch((err) => {
             console.error('Error during extraction:', err);
